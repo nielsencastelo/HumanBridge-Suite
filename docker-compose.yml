@@ -1,0 +1,30 @@
+services:
+  api:
+    build: ./api
+    container_name: humanbridge_api
+    environment:
+      APP_NAME: HumanBridge API
+      APP_ENV: development
+      APP_DEBUG: "true"
+      API_V1_PREFIX: /api/v1
+      SQLITE_PATH: /data/humanbridge.db
+      CORS_ORIGINS: http://localhost:3000,http://localhost:19006,http://localhost:8081
+      LLM_MODE: off
+      DEFAULT_LOCALE: pt-BR
+    ports:
+      - "8000:8000"
+    volumes:
+      - humanbridge_data:/data
+
+  web:
+    build: ./web
+    container_name: humanbridge_web
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+
+volumes:
+  humanbridge_data:

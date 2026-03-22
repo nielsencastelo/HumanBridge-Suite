@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "HumanBridge",
+    "slug": "humanbridge-mobile",
+    "scheme": "humanbridge",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": ["**/*"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": ["expo-router"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.humanbridge.mobile"
+    }
+  }
+}
