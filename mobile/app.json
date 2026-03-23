@@ -3,18 +3,26 @@
     "name": "HumanBridge",
     "slug": "humanbridge-mobile",
     "scheme": "humanbridge",
+    "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
     "assetBundlePatterns": ["**/*"],
     "experiments": {
       "typedRoutes": true
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.humanbridge.mobile"
     },
     "android": {
-      "package": "com.humanbridge.mobile"
+      "package": "com.humanbridge.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#08111f"
+      }
     }
   }
 }
