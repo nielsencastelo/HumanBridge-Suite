@@ -33,3 +33,18 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+# ─── Known provider base URLs ────────────────────────────────────────────────
+PROVIDER_BASE_URLS: dict[str, str] = {
+    "openai":    "https://api.openai.com/v1",
+    "anthropic": "https://api.anthropic.com/v1",
+    "gemini":    "https://generativelanguage.googleapis.com/v1beta/openai",
+    "groq":      "https://api.groq.com/openai/v1",
+    "together":  "https://api.together.xyz/v1",
+    "mistral":   "https://api.mistral.ai/v1",
+    "deepseek":  "https://api.deepseek.com/v1",
+    "ollama":    "http://localhost:11434/v1",
+    "lmstudio":  "http://localhost:1234/v1",
+    "custom":    "",  # user fills base_url manually
+}

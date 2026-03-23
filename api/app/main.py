@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db import init_db
-from app.routers import bureaucracy, health, readbuddy
+from app.routers import bureaucracy, health, readbuddy, ai_settings
 
 
 @asynccontextmanager
@@ -43,3 +43,4 @@ async def root():
 app.include_router(health.router, prefix=settings.api_v1_prefix, tags=["health"])
 app.include_router(bureaucracy.router, prefix=settings.api_v1_prefix, tags=["bureaucracy"])
 app.include_router(readbuddy.router, prefix=settings.api_v1_prefix, tags=["readbuddy"])
+app.include_router(ai_settings.router, prefix=settings.api_v1_prefix, tags=["ai-settings"])

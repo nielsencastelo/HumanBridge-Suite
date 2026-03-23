@@ -274,7 +274,7 @@ class BureaucracyService:
             summary += f" Trecho inicial relevante: {first}"
         return summary
 
-    async def analyze(self, raw_text: str, context_notes: Optional[str] = None) -> BureaucracyAnalysisResponse:
+    async def analyze(self, raw_text: str, context_notes: Optional[str] = None, llm_credentials=None) -> BureaucracyAnalysisResponse:
         doc_type, topic = self.detect_type_and_topic(raw_text)
         deadlines = self.extract_deadlines(raw_text)
         required_documents = self.extract_required_documents(raw_text)
@@ -287,8 +287,18 @@ class BureaucracyService:
 
         summary = self.build_summary(doc_type, topic, raw_text, actions, deadlines)
 
+        # Build LLM client: use per-request credentials if provided, else server default
+        if llm_credentials:
+            llm = OptionalLlmClient(
+                override_base_url=llm_credentials.base_url,
+                override_api_key=llm_credentials.api_key,
+                override_model=llm_credentials.model,
+            )
+        else:
+            llm = self.llm
+
         llm_used = False
-        llm_summary = await self.llm.rewrite(
+        llm_summary = await llm.rewrite(
             system_prompt=(
                 "Reescreva documentos burocráticos em português simples, com no máximo 4 frases, "
                 "sem inventar fatos e sem juridiquês."
@@ -320,5 +330,5 @@ class BureaucracyService:
             important_entities=entities,
             urgency=urgency,
             confidence=confidence,
-            llm=self.llm.info(used=llm_used),
+            llm=llm.info(used=llm_used),
         )

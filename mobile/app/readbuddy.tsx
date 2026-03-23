@@ -9,6 +9,12 @@ type Profile = {
   grade_level?: string;
 };
 
+function toErrorString(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  try { return JSON.stringify(err); } catch { return "Erro desconhecido."; }
+}
+
 export default function ReadBuddyScreen() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfileId, setSelectedProfileId] = useState<number | undefined>(undefined);
@@ -18,23 +24,32 @@ export default function ReadBuddyScreen() {
   const [expectedText, setExpectedText] = useState("");
   const [transcript, setTranscript] = useState("");
   const [durationSeconds, setDurationSeconds] = useState("25");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<any>(null);
 
   async function refreshProfiles() {
-    const data = await listProfiles();
-    setProfiles(data.items);
+    try {
+      const data = await listProfiles();
+      setProfiles(data.items ?? []);
+    } catch (err) {
+      console.error("Erro ao carregar perfis:", toErrorString(err));
+    }
   }
 
   useEffect(() => {
-    refreshProfiles().catch(console.error);
+    refreshProfiles();
   }, []);
 
   async function handleCreateProfile() {
+    if (!profileName.trim()) {
+      setError("Informe o nome do aluno.");
+      return;
+    }
     setError("");
     try {
       const created = await createProfile({
-        full_name: profileName,
+        full_name: profileName.trim(),
         age: Number(profileAge),
         grade_level: "3º ano",
         language: "pt-BR"
@@ -43,30 +58,41 @@ export default function ReadBuddyScreen() {
       setProfileName("");
       await refreshProfiles();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao salvar perfil.");
+      setError(toErrorString(err));
     }
   }
 
   async function handleAnalyze() {
+    if (!expectedText.trim()) {
+      setError("Informe o texto esperado.");
+      return;
+    }
+    if (!transcript.trim()) {
+      setError("Informe a transcrição do que foi lido.");
+      return;
+    }
     setError("");
     setResult(null);
+    setLoading(true);
 
     try {
       const data = await analyzeReading({
         profile_id: selectedProfileId,
         expected_text: expectedText,
         transcript,
-        duration_seconds: Number(durationSeconds),
+        duration_seconds: Number(durationSeconds) || 25,
         language: "pt-BR"
       });
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao analisar.");
+      setError(toErrorString(err));
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.title}>ReadBuddy</Text>
       <Text style={styles.subtitle}>Perfil rápido + análise de leitura.</Text>
 
@@ -85,6 +111,7 @@ export default function ReadBuddyScreen() {
           placeholderTextColor={colors.muted}
           value={profileAge}
           onChangeText={setProfileAge}
+          keyboardType="numeric"
         />
         <Pressable style={styles.button} onPress={handleCreateProfile}>
           <Text style={styles.buttonText}>Salvar perfil</Text>
@@ -135,26 +162,41 @@ export default function ReadBuddyScreen() {
           placeholderTextColor={colors.muted}
           value={durationSeconds}
           onChangeText={setDurationSeconds}
+          keyboardType="numeric"
         />
-        <Pressable style={styles.button} onPress={handleAnalyze}>
-          <Text style={styles.buttonText}>Analisar leitura</Text>
+        <Pressable
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleAnalyze}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>{loading ? "Analisando..." : "Analisar leitura"}</Text>
         </Pressable>
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.error}>{error}</Text>
+        </View>
+      ) : null}
 
       {result ? (
         <View style={styles.card}>
           <Text style={styles.section}>Resultado</Text>
-          <Text style={styles.text}>Precisão: {result.accuracy_score.toFixed(1)}%</Text>
-          <Text style={styles.text}>PPM: {result.words_per_minute.toFixed(1)}</Text>
+          <Text style={styles.text}>Precisão: {Number(result.accuracy_score).toFixed(1)}%</Text>
+          <Text style={styles.text}>PPM: {Number(result.words_per_minute).toFixed(1)}</Text>
           <Text style={styles.text}>Nível: {result.reading_level}</Text>
           <Text style={styles.text}>{result.parent_feedback}</Text>
 
-          <Text style={styles.section}>Exercícios</Text>
-          {result.exercises.map((item: any, index: number) => (
-            <Text key={index} style={styles.text}>• {item.title}: {item.target_words.join(", ")}</Text>
-          ))}
+          {result.exercises?.length ? (
+            <>
+              <Text style={styles.section}>Exercícios</Text>
+              {result.exercises.map((item: any, index: number) => (
+                <Text key={index} style={styles.text}>
+                  • {item.title}: {Array.isArray(item.target_words) ? item.target_words.join(", ") : ""}
+                </Text>
+              ))}
+            </>
+          ) : null}
         </View>
       ) : null}
     </ScrollView>
@@ -206,6 +248,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center"
   },
+  buttonDisabled: {
+    opacity: 0.5
+  },
   buttonText: {
     color: "#06101d",
     fontWeight: "700"
@@ -219,6 +264,13 @@ const styles = StyleSheet.create({
   text: {
     color: colors.text,
     lineHeight: 22
+  },
+  errorBox: {
+    backgroundColor: "#2a0a0a",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    padding: 12
   },
   error: {
     color: colors.danger

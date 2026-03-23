@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 
-from app.schemas.common import LlmInfo
+from app.schemas.common import LlmInfo, LlmCredentials
 
 
 class StudentProfileCreate(BaseModel):
@@ -56,6 +56,7 @@ class AnalyzeReadingRequest(BaseModel):
     duration_seconds: float = Field(gt=0)
     language: str = "pt-BR"
     comprehension_goal: Optional[str] = None
+    llm_credentials: Optional[LlmCredentials] = None
 
 
 class ReadingAnalysisResponse(BaseModel):

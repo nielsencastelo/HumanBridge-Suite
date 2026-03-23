@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.schemas.common import LlmInfo
+from app.schemas.common import LlmInfo, LlmCredentials
 
 
 class DeadlineItem(BaseModel):
@@ -28,6 +28,7 @@ class BureaucracyAnalyzeTextRequest(BaseModel):
     raw_text: str = Field(min_length=20)
     locale: str = "pt-BR"
     context_notes: Optional[str] = None
+    llm_credentials: Optional[LlmCredentials] = None
 
 
 class BureaucracyAnalysisResponse(BaseModel):
@@ -52,3 +53,4 @@ class FileAnalysisMetadata(BaseModel):
     content_type: Optional[str] = None
     file_size_bytes: int
     ocr_used: bool = False
+

@@ -161,8 +161,18 @@ class ReadBuddyService:
             "Finalizar com leitura em voz alta mais confiante.",
         ]
 
+        # Use per-request credentials if provided, else server default
+        if payload.llm_credentials:
+            llm = OptionalLlmClient(
+                override_base_url=payload.llm_credentials.base_url,
+                override_api_key=payload.llm_credentials.api_key,
+                override_model=payload.llm_credentials.model,
+            )
+        else:
+            llm = self.llm
+
         llm_used = False
-        llm_parent = await self.llm.rewrite(
+        llm_parent = await llm.rewrite(
             system_prompt=(
                 "Você é um tutor de leitura. Reescreva o feedback para pais em português claro, "
                 "em no máximo 4 frases, com tom encorajador."
@@ -189,7 +199,7 @@ class ReadBuddyService:
             mistakes=mistakes,
             exercises=exercises,
             comprehension_questions=questions,
-            llm=self.llm.info(used=llm_used),
+            llm=llm.info(used=llm_used),
         )
 
     def to_session_model(

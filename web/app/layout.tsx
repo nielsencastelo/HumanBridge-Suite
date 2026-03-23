@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/">Início</Link>
               <Link href="/translator">BridgeForm</Link>
               <Link href="/readbuddy">ReadBuddy</Link>
+              <Link href="/settings" style={{ opacity: 0.75 }}>⚙ Configurações</Link>
             </nav>
           </div>
         </header>
